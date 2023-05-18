@@ -23,7 +23,8 @@ COMPUTER_IMAGE_Y = SCREEN_HEIGHT / 2
 ATTACK_ROW = SCREEN_HEIGHT * 0.25
 ATTACK_FRAME_WIDTH = 154 / 2
 ATTACK_FRAME_HEIGHT = 154 / 2
-ANIMATION_INTERVAL = 0.1
+ANIMATION_INTERVAL = 0.2
+
 
 class MyGame(arcade.Window):
     """
@@ -33,12 +34,10 @@ class MyGame(arcade.Window):
    Si vous en avez besoin, remplacer le mot clé "pass" par votre propre code.
    """
 
-
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
 
         arcade.set_background_color(arcade.color.BLACK_OLIVE)
-
         # creation des textures
         self.rock_texture = arcade.load_texture("assets/srock.png")
         self.paper_texture = arcade.load_texture("assets/spaper.png")
@@ -48,34 +47,40 @@ class MyGame(arcade.Window):
         self.scissors_attack = arcade.load_texture("assets/scissors-attack.png")
 
         self.player_rock = Animation(ANIMATION_INTERVAL, [self.rock_texture, self.rock_attack],
-                                     center_x=PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 2, center_y=ATTACK_ROW, image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
-        self.player_rock_rectangle = Rectangle(PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 2, ATTACK_ROW, ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
+                                     center_x=PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 2, center_y=ATTACK_ROW,
+                                     image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+        self.player_rock_rectangle = Rectangle(PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 2, ATTACK_ROW, ATTACK_FRAME_WIDTH,
+                                               ATTACK_FRAME_HEIGHT)
         self.player_paper = Animation(ANIMATION_INTERVAL, [self.paper_texture, self.spaper_attack],
-                                      center_x=PLAYER_IMAGE_X, center_y=ATTACK_ROW, image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+                                      center_x=PLAYER_IMAGE_X, center_y=ATTACK_ROW, image_width=ATTACK_FRAME_WIDTH,
+                                      image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
         self.player_paper_rectangle = Rectangle(PLAYER_IMAGE_X, ATTACK_ROW, ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
         self.player_scissors = Animation(ANIMATION_INTERVAL, [self.scissors_texture, self.scissors_attack],
-                                         center_x=PLAYER_IMAGE_X + ATTACK_FRAME_WIDTH * 2, center_y=ATTACK_ROW, image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+                                         center_x=PLAYER_IMAGE_X + ATTACK_FRAME_WIDTH * 2, center_y=ATTACK_ROW,
+                                         image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
 
         self.player_scissors_rectangle = Rectangle(PLAYER_IMAGE_X + ATTACK_FRAME_WIDTH * 2, ATTACK_ROW,
                                                    ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
         self.player_sprite = Sprite("assets/faceBeard.png", center_x=PLAYER_IMAGE_X, center_y=PLAYER_IMAGE_Y, scale=0.4)
-        self.computer_sprite = Sprite("assets/compy.png", center_x=COMPUTER_IMAGE_X, center_y=COMPUTER_IMAGE_Y)
+        self.computer_sprite = Sprite("assets/compy.png", center_x=COMPUTER_IMAGE_X, center_y=COMPUTER_IMAGE_Y, scale=2)
+
+        # textes pour montrer les scores
+        self.player_score_text = arcade.Text("", PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 1.5, ATTACK_ROW - 75, arcade.color.WHITE, 20)
+        self.computer_score_text = arcade.Text("", COMPUTER_IMAGE_X - ATTACK_FRAME_WIDTH * 1.5, ATTACK_ROW - 75, arcade.color.WHITE, 20)
+        self.instruction_text = arcade.Text("", SCREEN_WIDTH / 4, SCREEN_HEIGHT * 0.75, arcade.color.WHITE, 20)
         self.player_score = 0
         self.computer_score = 0
         self.player_attack_type = None
         self.computer_attack_type = None
         self.player_won_round = None
         self.draw_round = None
-        self.game_state = None
+        self.game_state = GameState.NOT_STARTED
 
     def setup(self):
         """
        Configurer les variables de votre jeu ici. Il faut appeler la méthode une nouvelle
        fois si vous recommencer une nouvelle partie.
        """
-        # C'est ici que vous allez créer vos listes de sprites et vos sprites.
-        # Prenez note que vous devriez attribuer une valeur à tous les attributs créés dans __init__
-
 
     def validate_victory(self):
         """
@@ -113,13 +118,16 @@ class MyGame(arcade.Window):
         """
        Montrer les scores du joueur et de l'ordinateur
        """
-        pass
+        self.player_score_text.draw()
+        self.computer_score_text.draw()
 
     def draw_instructions(self):
         """
        Dépendemment de l'état de jeu, afficher les instructions d'utilisation au joueur (appuyer sur espace, ou sur une image)
        """
-        pass
+        if self.game_state == GameState.NOT_STARTED:
+            self.instruction_text.text = "Appuyez sur espace pour commencer"
+        self.instruction_text.draw()
 
     def on_draw(self):
         """
@@ -160,10 +168,12 @@ class MyGame(arcade.Window):
         # vérifier si le jeu est actif (ROUND_ACTIVE) et continuer l'animation des attaques
         # si le joueur a choisi une attaque, générer une attaque de l'ordinateur et valider la victoire
         # changer l'état de jeu si nécessaire (GAME_OVER)
-        #faire les animations
+        # faire les animations
         self.player_rock.update(delta_time)
         self.player_paper.update(delta_time)
         self.player_scissors.update(delta_time)
+        self.player_score_text.text = "Vous avez " + str(self.player_score) + " points"
+        self.computer_score_text.text = "L'ordinateur a " + str(self.computer_score) + " points"
 
     def on_key_press(self, key, key_modifiers):
         """
