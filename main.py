@@ -61,6 +61,21 @@ class MyGame(arcade.Window):
 
         self.player_scissors_rectangle = Rectangle(PLAYER_IMAGE_X + ATTACK_FRAME_WIDTH * 2, ATTACK_ROW,
                                                    ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
+        self.comp_rock = Animation(ANIMATION_INTERVAL, [self.rock_texture, self.rock_attack],
+                                     center_x=COMPUTER_IMAGE_X, center_y=ATTACK_ROW,
+                                     image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+        self.comp_rock_rectangle = Rectangle(COMPUTER_IMAGE_X, ATTACK_ROW, ATTACK_FRAME_WIDTH,
+                                               ATTACK_FRAME_HEIGHT)
+        self.comp_paper = Animation(ANIMATION_INTERVAL, [self.paper_texture, self.spaper_attack],
+                                      center_x=COMPUTER_IMAGE_X, center_y=ATTACK_ROW, image_width=ATTACK_FRAME_WIDTH,
+                                      image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+        self.comp_paper_rectangle = Rectangle(COMPUTER_IMAGE_X, ATTACK_ROW, ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
+        self.comp_scissors = Animation(ANIMATION_INTERVAL, [self.scissors_texture, self.scissors_attack],
+                                         center_x=COMPUTER_IMAGE_X, center_y=ATTACK_ROW,
+                                         image_width=ATTACK_FRAME_WIDTH, image_height=ATTACK_FRAME_HEIGHT, scale=0.5)
+
+        self.comp_scissors_rectangle = Rectangle(COMPUTER_IMAGE_X, ATTACK_ROW,
+                                                   ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
         self.player_attacks = [self.player_rock, self.player_paper, self.player_scissors]
         self.player_rectangles = [self.player_rock_rectangle, self.player_paper_rectangle, self.player_scissors_rectangle]
         self.player_sprite = Sprite("assets/faceBeard.png", center_x=PLAYER_IMAGE_X, center_y=PLAYER_IMAGE_Y, scale=0.4)
@@ -70,7 +85,7 @@ class MyGame(arcade.Window):
         self.player_score_text = arcade.Text("", PLAYER_IMAGE_X - ATTACK_FRAME_WIDTH * 1.5, ATTACK_ROW - 75, arcade.color.WHITE, 20)
         self.computer_score_text = arcade.Text("", COMPUTER_IMAGE_X - ATTACK_FRAME_WIDTH * 1.5, ATTACK_ROW - 75, arcade.color.WHITE, 20)
         self.instruction_text = arcade.Text("", SCREEN_WIDTH / 4, SCREEN_HEIGHT * 0.75, arcade.color.WHITE, 20)
-        self.outcome_text = arcade.Text("", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, arcade.color.WHITE, 20)
+        self.outcome_text = arcade.Text("", SCREEN_WIDTH * 0.4, SCREEN_HEIGHT / 2, arcade.color.WHITE, 20)
         self.player_score = 0
         self.computer_score = 0
         self.player_attack_type = None
@@ -96,12 +111,15 @@ class MyGame(arcade.Window):
        (si aucune attaque n'a été sélectionnée, il faut dessiner les trois possibilités)
        (si une attaque a été sélectionnée, il faut dessiner cette attaque)
        """
-        self.player_rock.draw()
-        self.player_rock_rectangle.draw()
-        self.player_paper.draw()
-        self.player_paper_rectangle.draw()
-        self.player_scissors.draw()
-        self.player_scissors_rectangle.draw()
+        if self.player_attack_type is None or self.player_attack_type == 0:
+            self.player_rock.draw()
+            self.player_rock_rectangle.draw()
+        if self.player_attack_type is None or self.player_attack_type == 1:
+            self.player_paper.draw()
+            self.player_paper_rectangle.draw()
+        if self.player_attack_type is None or self.player_attack_type == 2:
+            self.player_scissors.draw()
+            self.player_scissors_rectangle.draw()
 
     def draw_players(self):
         """
@@ -114,7 +132,16 @@ class MyGame(arcade.Window):
         """
        Méthode utilisée pour dessiner les possibilités d'attaque de l'ordinateur
        """
-        pass
+        if self.game_state == GameState.ROUND_DONE:
+            if self.computer_attack_type == 0:
+                self.comp_rock.draw()
+                self.comp_rock_rectangle.draw()
+            elif self.computer_attack_type == 1:
+                self.comp_paper.draw()
+                self.comp_paper_rectangle.draw()
+            elif self.computer_attack_type == 2:
+                self.comp_scissors.draw()
+                self.comp_scissors_rectangle.draw()
 
     def draw_scores(self):
         """
@@ -139,6 +166,17 @@ class MyGame(arcade.Window):
             self.instruction_text.text = 'Appuyez sur espace pour commencer une nouvelle partie'
         self.instruction_text.draw()
 
+    def draw_result(self):
+        if self.game_state == GameState.ROUND_DONE:
+            if self.outcome == GameOutcome.PLAYER_WON:
+                self.outcome_text.text = "Vous avez gagné!"
+            elif self.outcome == GameOutcome.COMPUTER_WON:
+                self.outcome_text.text = "L'ordinateur a gagné!"
+            elif self.outcome == GameOutcome.DRAW:
+                self.outcome_text.text = "Égalité!"
+        else:
+            self.outcome_text.text = ""
+        self.outcome_text.draw()
     def on_draw(self):
         """
        C'est la méthode que Arcade invoque à chaque "frame" pour afficher les éléments
@@ -162,7 +200,8 @@ class MyGame(arcade.Window):
         self.draw_players()
         self.draw_possible_attack()
         self.draw_scores()
-
+        self.draw_result()
+        self.draw_computer_attack()
         # afficher l'attaque de l'ordinateur selon l'état de jeu
         # afficher le résultat de la partie si l'ordinateur a joué (ROUND_DONE)
         pass
@@ -182,6 +221,11 @@ class MyGame(arcade.Window):
         self.player_rock.update(delta_time)
         self.player_paper.update(delta_time)
         self.player_scissors.update(delta_time)
+        self.comp_rock.update(delta_time)
+        self.comp_paper.update(delta_time)
+        self.comp_scissors.update(delta_time)
+        if self.player_score == 3 or self.computer_score == 3:
+            self.game_state = GameState.GAME_OVER
 
 
 
@@ -200,6 +244,9 @@ class MyGame(arcade.Window):
             self.game_state = GameState.ROUND_ACTIVE
         elif key == arcade.key.SPACE and self.game_state == GameState.ROUND_DONE:
             self.game_state = GameState.ROUND_ACTIVE
+            self.player_attack_type = None
+        elif key == arcade.key.SPACE and self.game_state == GameState.GAME_OVER:
+            self.reset_round()
 
 
     def reset_round(self):
@@ -211,8 +258,12 @@ class MyGame(arcade.Window):
         # self.player_attack_type = {AttackType.ROCK: False, AttackType.PAPER: False, AttackType.SCISSORS: False}
         # self.player_won_round = False
         # self.draw_round = False
-
-        pass
+        self.game_state = GameState.NOT_STARTED
+        self.player_attack_type = None
+        self.computer_attack_type = None
+        self.outcome = None
+        self.player_score = 0
+        self.computer_score = 0
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         """
