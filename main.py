@@ -7,22 +7,26 @@ import random
 from arcade import Sprite
 import arcade
 from rectangle import Rectangle
-from attack_animations import AttackType, Animation
+from attack_animations import Animation
 from game_state import GameState, GameOutcome
-from PIL.Image import open as open_image
 
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Roche, papier, ciseaux"
-DEFAULT_LINE_HEIGHT = 45  # The default line height for text.
+#hauteur de chaque ligne
+DEFAULT_LINE_HEIGHT = 45  
 
+#la position des sprites des deux joueurs
 PLAYER_IMAGE_X = SCREEN_WIDTH * 0.25
 PLAYER_IMAGE_Y = SCREEN_HEIGHT / 2
 COMPUTER_IMAGE_X = SCREEN_WIDTH * 0.75
 COMPUTER_IMAGE_Y = SCREEN_HEIGHT / 2
+#la rangée sur laquelle se trouve les attaques
 ATTACK_ROW = SCREEN_HEIGHT * 0.25
+#la taille du rectangle entourant les attaques
 ATTACK_FRAME_WIDTH = 154 / 2
 ATTACK_FRAME_HEIGHT = 154 / 2
+#le temps entres les deux frames de chaque attaque
 ANIMATION_INTERVAL = 0.2
 
 
@@ -79,7 +83,6 @@ class MyGame(arcade.Window):
 
         self.comp_scissors_rectangle = Rectangle(COMPUTER_IMAGE_X, ATTACK_ROW,
                                                    ATTACK_FRAME_WIDTH, ATTACK_FRAME_HEIGHT)
-        self.player_attacks = [self.player_rock, self.player_paper, self.player_scissors]
         self.player_rectangles = [self.player_rock_rectangle, self.player_paper_rectangle, self.player_scissors_rectangle]
         #les sprites du joueur et de l'ordi
         self.player_sprite = Sprite("assets/faceBeard.png", center_x=PLAYER_IMAGE_X, center_y=PLAYER_IMAGE_Y, scale=0.4)
